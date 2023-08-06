@@ -29,7 +29,7 @@ class QuestionAdmin(admin.ModelAdmin):
     ]
 
 class ChoiceAdmin(admin.ModelAdmin):
-    pass    
+    pass 
 
 class CourseAdmin(admin.ModelAdmin):
     inlines = [LessonInline, QuestionInLine]
