@@ -99,9 +99,11 @@ class Enrollment(models.Model):
 
 class Question(models.Model):
     #foreignekey to lesson row in table
-    lesson = models.ForeignKey('Lesson', on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, default=1)
+    #title field
+    title = models.CharField(max_length=100, blank=False, null=False, default='Default Title, Please add a New One')
     #question text field
-    question_text = models.TextField
+    question_text = models.TextField(max_length=1000, blank=False, null=False, default='Default Question Text, Please add a New One')
     # question grade field
     question_grade = models.PositiveBigIntegerField()
     #add extra methods for questions here
@@ -127,8 +129,12 @@ class Question(models.Model):
 class Choice(models.Model):
     choice_text= models.CharField(max_length=200)
     is_correct = models.BooleanField(default=False)
-    question_id = models.ForeignKey(Question, on_delete=models.CASCADE)
-
+    question_id = models.ForeignKey(
+        Question, 
+        on_delete=models.CASCADE,
+        limit_choices_to={'title__isnull': False}
+        )
+    
 
 
 # <HINT> The submission model
