@@ -29,6 +29,8 @@ DEBUG = True
 # <HINT> add your cloud host here
 ALLOWED_HOSTS = []
 
+#Config of Primary Key Type
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 # Application definition
 INSTALLED_APPS = [

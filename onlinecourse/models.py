@@ -95,25 +95,27 @@ class Enrollment(models.Model):
     rating = models.FloatField(default=5.0)
 
 
-# <HINT> Create a Question Model with:
-    # Used to persist question content for a course
-    # Has a One-To-Many (or Many-To-Many if you want to reuse questions) relationship with course
-    # Has a grade point for each question
-    # Has question content
-    # Other fields and methods you would like to design
-#class Question(models.Model):
-    # Foreign key to lesson
-    # question text
-    # question grade/mark
 
-    # <HINT> A sample model method to calculate if learner get the score of the question
-    #def is_get_score(self, selected_ids):
-    #    all_answers = self.choice_set.filter(is_correct=True).count()
-    #    selected_correct = self.choice_set.filter(is_correct=True, id__in=selected_ids).count()
-    #    if all_answers == selected_correct:
-    #        return True
-    #    else:
-    #        return False
+
+class Question(models.Model):
+    #foreignekey to lesson row in table
+    lesson = models.ForeignKey('Lesson', on_delete=models.CASCADE)
+    #question text field
+    question_text = models.TextField
+    # question grade field
+    question_grade = models.PositiveBigIntegerField()
+    #add extra methods for questions here
+
+    def is_get_score(self, selected_ids):
+        # Get the count of all correct choices for the question
+        all_answers = self.choice_set.filter(is_correct=True).count()
+        # Get the count of correct choices among the selected choices
+        selected_correct = self.choice_set.filter(is_correct=True, id__in=selected_ids).count()
+        # Compare the counts and return True if all correct choices are selected, otherwise False
+        if all_answers == selected_correct:
+            return True
+        else:
+            return False
 
 
 #  <HINT> Create a Choice Model with:
@@ -122,13 +124,18 @@ class Enrollment(models.Model):
     # Choice content
     # Indicate if this choice of the question is a correct one or not
     # Other fields and methods you would like to design
-# class Choice(models.Model):
+class Choice(models.Model):
+    choice_text= models.CharField(max_length=200)
+    is_correct = models.BooleanField(default=False)
+    question_id = models.ForeignKey(Question, on_delete=models.CASCADE)
+
+
 
 # <HINT> The submission model
 # One enrollment could have multiple submission
 # One submission could have multiple choices
 # One choice could belong to multiple submissions
-#class Submission(models.Model):
-#    enrollment = models.ForeignKey(Enrollment, on_delete=models.CASCADE)
-#    chocies = models.ManyToManyField(Choice)
-#    Other fields and methods you would like to design
+class Submission(models.Model):
+   enrollment = models.ForeignKey(Enrollment, on_delete=models.CASCADE)
+   chocies = models.ManyToManyField(Choice)
+   #Other fields and methods you would like to design
