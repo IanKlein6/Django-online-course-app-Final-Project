@@ -28,7 +28,7 @@ class QuestionAdmin(admin.ModelAdmin):
         (None, {'fields': ['title', 'course','question_text', 'question_grade']}),
     ]
 
-class ChoiseAdmin(admin.ModelAdmin):
+class ChoiceAdmin(admin.ModelAdmin):
     pass    
 
 class CourseAdmin(admin.ModelAdmin):
@@ -43,7 +43,7 @@ class LessonAdmin(admin.ModelAdmin):
 
 # <HINT> Register Question and Choice models here
 admin.site.register(Question, QuestionAdmin)
-admin.site.register(Choice, ChoiseAdmin)
+admin.site.register(Choice, ChoiceAdmin)
 admin.site.register(Course, CourseAdmin)
 admin.site.register(Lesson, LessonAdmin)
 admin.site.register(Instructor)
