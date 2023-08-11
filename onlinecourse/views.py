@@ -1,16 +1,33 @@
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
-# <HINT> Import any new Models here
-from .models import Course, Enrollment, Submission, Choice
+from .models import Course, Enrollment, Submission, Choice, Question
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from django.views import generic
 from django.contrib.auth import login, logout, authenticate
 import logging
-# Get an instance of a logger
+from django.http import JsonResponse #for get_quiz_question
+
+# Logger Instace 
 logger = logging.getLogger(__name__)
-# Create your views here.
+
+
+# VIEWS: 
+
+# HTLM exam questions request 
+def get_quiz_questions(request, course_id):
+    course = get_object_or_404(Course, pk=course_id)
+    quiz_questions = Question.objects.filter(course=course)
+    data = []
+    for question in quiz_questions:
+        question_data = {
+            'question_text': question.question_text,
+            'choices': [{'id': choice.id, 'text': choice.choice_text} for choice in question.choice_set.all()]
+        }
+        data.append(question_data)
+    return JsonResponse(data, safe=False)
+
 
 
 def registration_request(request):
@@ -144,7 +161,7 @@ def submit(request, course_id):
         return render(request, 'submit_exam.html', context)
 
 
-#<HINT> A example method to collect the selected choices from the exam form from the request object
+#A example method to collect the selected choices from the exam form from the request object
 def extract_answers(request):
     submitted_anwsers = []
     for key in request.POST:
@@ -207,7 +224,7 @@ def show_exam_result(request, course_id, submission_id):
         'total_score': total_score,
         'passed_exam': passed_exam,
     }
-    
+
     return render(request, 'exam_result.html', context)
 
 
