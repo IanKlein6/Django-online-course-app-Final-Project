@@ -38,17 +38,33 @@
 <div class="container-fluid">
     {% if grade > 80 %}
     <div class="alert alert-success">
-       <!--HINT Display passed info -->
+       Congratulations! You passed the exam with a grade of {{ percentage_grade }}%
     </div>
+        <a class="btn btn-link text-success" href="{% url 'onlinecourse:course_details' course.id %}">Back to Course</a>
         {% else %}
         <div class="alert alert-danger">
-            <!--HINT Display failed info -->
+            Unfortunately, you did not pass the Quiz. Your grade is {{ percentage_grade }}%.
         </div>
         <a class="btn btn-link text-danger" href="{% url 'onlinecourse:course_details' course.id %}">Re-test</a>
         {% endif %}
         <div class="card-columns-vertical mt-1">
+        <a class="btn btn-link text-info" href="{% url 'onlinecourse:show_exam_result' course.id submission.id %}">View Exam Result</a>
         <h5 class="">Exam results</h5>
-            <!--HINT Display exam results-->
+            {% for question_text, selected_choice_text, selected_correct in show_exam_results %}
+            <div class="card mb-2">
+                <div class="card-header">
+                    {{ question_text }}
+                </div>
+                <div class="card-body">
+                    Selected Choice: {{ selected_choice_text  }}
+                    {% if selected_correct %}
+                    <span class="text-success">Correct</span>
+                    {% else %}
+                    <span class="text-danger">Incorrect</span>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}    
         </div>
     </div>
 </body>

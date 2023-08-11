@@ -97,10 +97,9 @@
             <button type="button" class="btn btn-primary custom-quiz-button quiz-button" data-course-id="{{ course.id }}" data-toggle="collapse" data-target="#exam">
                 Quiz </button>
             <div id="exam" class="collapse">
-                
                 <div class="btn btn-info btn-block">Start Quiz</div>
                 <div class="quiz-questions-container">
-                    <form id="questionform" action="point to a submit view" method="post">
+                    <form id="questionform" action="{% url 'onlinecourse:show_exam_result' course.id submission_id %}" method="post">
                         {% csrf_token %}
                         {% for question in questions %}
                         <div class="card mt-1">

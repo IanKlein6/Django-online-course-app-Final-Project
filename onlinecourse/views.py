@@ -144,7 +144,7 @@ def submit(request, course_id):
         submission.choices.set(selected_choices)
 
         # Redirect to show_exam_result view with submission id
-        return redirect('onlinecourse:show_exam_result', course_id=course_id, submission_id=submission.id)
+        return HttpResponseRedirect(reverse('onlinecourse:show_exam_result', args=[course_id, submission.id]))
     else:
         error_message = "An error occurred while processing your submission."
         context = {'error_message': error_message}
@@ -163,31 +163,54 @@ def extract_answers(request):
 
 
 def show_exam_result(request, course_id, submission_id):
+
+    print("Received course_id:", course_id)
+    print("Received submission_id:", submission_id)
+
     # Get course and submission based on their ids
     course = get_object_or_404(Course, id=course_id)
+    print("Course retrieved:", course)
+    
     submission = get_object_or_404(Submission, id=submission_id)
+    print("Submission retrieved:", submission)
 
+    # Get course and submission based on their ids
+    course = get_object_or_404(Course, id=course_id) 
+    print("alsdkjflaksjfdalskfdjsdksadldfjsdlkfjslkfjsldkfjskfjaskdf", course_id)
+    submission = get_object_or_404(Submission, id=submission_id)
+    print("alsdkjflaksjfdalskfdjsdksadldfjsdlkfjslkfjsldkfjskfjaskdf", submission_id)
     # Get selected choice ids from submission record
     selected_choice_ids = submission.choices.values_list('id', flat=True)
 
-    # Calculate total score and determine if learner passed the exam
+    # Calculate total score and maximum possible score
     total_score = 0
-    passed_exam = True
+    max_possible_score = 0
+    exam_results = []
     for question in course.question_set.all():
+        max_possible_score += question.question_grade
         correct_choice_ids = question.choice_set.filter(is_correct=True).values_list('id', flat=True)
         selected_correct = all(choice_id in selected_choice_ids for choice_id in correct_choice_ids)
         if selected_correct:
-            total_score += question.grade
-        else:
-            passed_exam = False
+            total_score += question.question_grade
+
+        # Retrieve selected choice text
+        selected_choice_text = Choice.objects.get(id__in=selected_choice_ids).choice_text
+
+        exam_results.append((question.question_text, selected_choice_text, selected_correct))
+
+    # Calculate the percentage grade
+    percentage_grade = (total_score / max_possible_score) * 100 if max_possible_score > 0 else 0
+
+    # Determine if the learner passed the exam
+    passed_exam = percentage_grade > 80
 
     context = {
-        'course': course,
-        'selected_ids': selected_choice_ids,
-        'total_score': total_score,
+        'grade': total_score,
+        'percentage_grade': percentage_grade,
         'passed_exam': passed_exam,
+        'course': course,
+        'exam_results': exam_results,
     }
 
-    return render(request, 'exam_result.html', context)
-
+    return render(request, 'exam_result_bootstrap.html', context)
 
