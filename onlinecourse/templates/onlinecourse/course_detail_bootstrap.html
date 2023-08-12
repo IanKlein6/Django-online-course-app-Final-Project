@@ -1,50 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-                {% load static %}
-                <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-                <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-                <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-                <meta charset="UTF-8">
-
-                <script>
-                    $(document).ready(function() {
-                        $('.quiz-button').click(function() {
-                            var courseId = $(this).data('course-id');
-                            $.ajax({
-                                url: "{% url 'onlinecourse:get_quiz_questions' course_id=0 %}".replace('0', courseId),
-                                success: function(data) {
-                                    var questionsHtml = "";
-                                    data.forEach(function(question) {
-                                        questionsHtml += '<div class="card mt-1">';
-                                        questionsHtml += '<div class="card-header"><h5>' + question.question_text + '</h5></div>';
-                                        questionsHtml += '<div class="form-group">';
-                                        question.choices.forEach(function(choice) {
-                                            questionsHtml += '<div class="form-check">';
-                                            questionsHtml += '<label class="form-check-label">';
-                                            questionsHtml += '<input type="checkbox" name="choice_' + choice.id + '"';
-                                            questionsHtml += ' class="form-check-input" id="' + choice.id + '"';
-                                            questionsHtml += ' value="' + choice.id + '">' + choice.text;
-                                            questionsHtml += '</label>';
-                                            questionsHtml += '</div>';
-                                        });
-                                        questionsHtml += '</div>';
-                                        questionsHtml += '</div>';
-                                    });
-                                    questionsHtml += '<input class="btn btn-success btn-block" type="submit" value="Submit">';
-                                    $('.quiz-questions-container').html(questionsHtml);
-                                },
-                                error: function(xhr, status, error) {
-                                    console.error("AJAX error:", error);
-                                }
-                            });
-                        });
-                    });
-                </script>
-            </body>
-        </html>
-    </head>
+        {% load static %}
+       <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+       <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+       <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+       <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+       <meta charset="UTF-8">
+   </head>
 
 <body>
     <!-- Navigation bar -->
@@ -87,38 +50,53 @@
                     </div>
                 {% endfor %}
             </div>
+
+
             <style>
                 .custom-quiz-button {
                     width: 200px; 
                 }
             </style>
-            <!-- Quiz drop down forum -->
-            <button type="button" class="btn btn-primary custom-quiz-button quiz-button" data-course-id="{{ course.id }}" data-toggle="collapse" data-target="#exam">
-                Quiz </button>
+             {% if user.is_authenticated %}
+            </br>
+            <button class="btn btn-primary btn-block" data-toggle="collapse" data-target="#exam">Start Exam</button>
             <div id="exam" class="collapse">
-                <div class="btn btn-info btn-block">Start Quiz</div>
-                <div class="quiz-questions-container">
-                    <form id="questionform" action="{% url 'onlinecourse:submit' course.id %}" method="post">
-                        {% for question in questions %}
-                        <div class="card mt-1">
-                            <div class="card-header"><h5>{{ question.question_text}} ({{ question.question_grade }})</h5></div>
+    
+    
+                <!-- <HINT> Create a form to collect the selected choices for all questions -->
+                <!-- <HINT> For each question choice, you may create a checkbox input like
+                <input type="check" name="choice_{{choice.id}}" id="{{choice.id}}" ...>
+                -->
+    
+                <!-- Choice submition form -->
+                <form id="questionform" action="{% url 'onlinecourse:submit' course.id %}" method="POST">
+                    {% for question in course.question_set.all %}
+                    <div class="card mt-1">
+                        <div class="card-header"><h5 class="d-flex justify-content-between align-items-center">
+                            {{ question.question_text }}
+                            <span>Marks 0/{{ question.question_grade }}</span>
+                            </h5>
+                        </div>
+                            {% csrf_token %}
                             <div class="form-group">
-                            {% for choice in question.choice_set.all %}
+                                {% for choice in question.choice_set.all %}
                                 <div class="form-check">
                                     <label class="form-check-label">
                                         <input type="checkbox" name="choice_{{choice.id}}"
-                                            class="form-check-input" id="{{choice.id}}"
-                                            value="{{choice.id}}">{{ choice.choice_text }}
+                                               class="form-check-input" id="{{choice.id}}"
+                                               value="{{choice.id}}">{{ choice.choice_text }}
                                     </label>
                                 </div>
                                 {% endfor %}
                             </div>
                         </div>
                         {% endfor %}
-                        <input class="btn btn-success btn-block" type="submit" value="Submit">
-                    </form>
-                </div>
+                    <input class="btn btn-success btn-block" type="submit" value="Submit">
+                </form>
             </div>
-    </div>
-</body>
+            {% endif %}
+                <!--Check here to see more details Bootstrap checkbox
+                 https://www.w3schools.com/bootstrap4/bootstrap_forms_inputs.asp-->
+        </div>
+    </body>
 </html>
