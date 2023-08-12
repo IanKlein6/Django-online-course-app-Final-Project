@@ -16,7 +16,9 @@ logger = logging.getLogger(__name__)
 # VIEWS: 
 
 # HTLM exam questions request 
+print("before get quiz questions")
 def get_quiz_questions(request, course_id):
+    print("inside get quiz questioons")
     course = get_object_or_404(Course, pk=course_id)
     quiz_questions = Question.objects.filter(course=course)
     data = []
@@ -29,8 +31,9 @@ def get_quiz_questions(request, course_id):
     return JsonResponse(data, safe=False)
 
 
-
+print("before registration")
 def registration_request(request):
+    print("inside registration")
     context = {}
     if request.method == 'GET':
         return render(request, 'onlinecourse/user_registration_bootstrap.html', context)
@@ -55,8 +58,9 @@ def registration_request(request):
             context['message'] = "User already exists."
             return render(request, 'onlinecourse/user_registration_bootstrap.html', context)
 
-
+print("before login request")
 def login_request(request):
+    print("insdie login request")
     context = {}
     if request.method == "POST":
         username = request.POST['username']
@@ -70,14 +74,16 @@ def login_request(request):
             return render(request, 'onlinecourse/user_login_bootstrap.html', context)
     else:
         return render(request, 'onlinecourse/user_login_bootstrap.html', context)
-
-
+    
+print("before logout")
 def logout_request(request):
+    print("inside logout")
     logout(request)
     return redirect('onlinecourse:index')
 
-
+print("before enrolled check")
 def check_if_enrolled(user, course):
+    print("inside enrolled check")
     is_enrolled = False
     if user.id is not None:
         # Check if user enrolled
@@ -88,25 +94,31 @@ def check_if_enrolled(user, course):
 
 
 # CourseListView
+print("before courselview")
 class CourseListView(generic.ListView):
+    print("inside courselview")
     template_name = 'onlinecourse/course_list_bootstrap.html'
     context_object_name = 'course_list'
-
+    print("inside courveiw, before quryset")
     def get_queryset(self):
+        print("inside get queryset")
         user = self.request.user
         courses = Course.objects.order_by('-total_enrollment')[:10]
         for course in courses:
             if user.is_authenticated:
                 course.is_enrolled = check_if_enrolled(user, course)
-        return courses
+        print("finnished query set")
+        return courses 
 
+        
 
 class CourseDetailView(generic.DetailView):
     model = Course
     template_name = 'onlinecourse/course_detail_bootstrap.html'
 
-
+print("before enroll")
 def enroll(request, course_id):
+    print("inside enroll")
     course = get_object_or_404(Course, pk=course_id)
     user = request.user
 
@@ -116,14 +128,16 @@ def enroll(request, course_id):
         Enrollment.objects.create(user=user, course=course, mode='honor')
         course.total_enrollment += 1
         course.save()
-
+    print("return course list view")
     return HttpResponseRedirect(reverse(viewname='onlinecourse:course_details', args=(course.id,)))
 
-
+print("before submit")
 def submit(request, course_id):
+    print(course_id, "course id submit")
     # Get current user/course object
     user = request.user
     course = get_object_or_404(Course, id=course_id)
+    
 
     # Get associated enrollment object
     enrollment = get_object_or_404(Enrollment, user=user, course=course)
@@ -144,15 +158,19 @@ def submit(request, course_id):
         submission.choices.set(selected_choices)
 
         # Redirect to show_exam_result view with submission id
+        print("before return")
         return HttpResponseRedirect(reverse('onlinecourse:show_exam_result', args=[course_id, submission.id]))
+    
     else:
+        print("after return in else")
         error_message = "An error occurred while processing your submission."
         context = {'error_message': error_message}
         return render(request, 'error_page.html', context, status=HttpResponseServerError.status_code)
 
-
+print("before extract answers")
 #A example method to collect the selected choices from the exam form from the request object
 def extract_answers(request):
+    print("inside extract answers")
     submitted_anwsers = []
     for key in request.POST:
         if key.startswith('choice'):
@@ -161,24 +179,13 @@ def extract_answers(request):
             submitted_anwsers.append(choice_id)
     return submitted_anwsers
 
-
+print("before show exam reuslts")
 def show_exam_result(request, course_id, submission_id):
-
-    print("Received course_id:", course_id)
-    print("Received submission_id:", submission_id)
-
+    print("inside show exam results", course_id, submission_id, )
     # Get course and submission based on their ids
     course = get_object_or_404(Course, id=course_id)
-    print("Course retrieved:", course)
-    
     submission = get_object_or_404(Submission, id=submission_id)
-    print("Submission retrieved:", submission)
 
-    # Get course and submission based on their ids
-    course = get_object_or_404(Course, id=course_id) 
-    print("alsdkjflaksjfdalskfdjsdksadldfjsdlkfjslkfjsldkfjskfjaskdf", course_id)
-    submission = get_object_or_404(Submission, id=submission_id)
-    print("alsdkjflaksjfdalskfdjsdksadldfjsdlkfjslkfjsldkfjskfjaskdf", submission_id)
     # Get selected choice ids from submission record
     selected_choice_ids = submission.choices.values_list('id', flat=True)
 
@@ -195,7 +202,6 @@ def show_exam_result(request, course_id, submission_id):
 
         # Retrieve selected choice text
         selected_choice_text = Choice.objects.get(id__in=selected_choice_ids).choice_text
-
         exam_results.append((question.question_text, selected_choice_text, selected_correct))
 
     # Calculate the percentage grade
@@ -203,14 +209,14 @@ def show_exam_result(request, course_id, submission_id):
 
     # Determine if the learner passed the exam
     passed_exam = percentage_grade > 80
-
     context = {
         'grade': total_score,
         'percentage_grade': percentage_grade,
         'passed_exam': passed_exam,
         'course': course,
         'exam_results': exam_results,
+        'submission_id': submission.id
     }
 
     return render(request, 'exam_result_bootstrap.html', context)
-
+print("end")

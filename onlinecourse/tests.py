@@ -1,26 +1,31 @@
 from django.test import TestCase
 from django.urls import reverse
-from .models import Course, Submission, Question, Choice
+from django.contrib.auth.models import User
+from .models import Course, Submission, Enrollment
 
-class ExamResultViewTest(TestCase):
+class ExamResultViewTestCase(TestCase):
     def setUp(self):
-        # Create a test course
-        self.course = Course.objects.create(name='course')
+        # Create a user
+        self.user = User.objects.create_user(username='testuser', password='testpass')
 
-        # Create a test submission for the course
-        self.submission = Submission.objects.create(course=self.course)
+        # Create a course
+        self.course = Course.objects.create(name='Test Course', description='A test course')
 
-        # Create test questions and choices
-        self.question1 = Question.objects.create(course=self.course, question_text='What is 1+1?', question_grade=2)
-        self.choice1_1 = Choice.objects.create(question=self.question1, choice_text='1', is_correct=False)
-        self.choice1_2 = Choice.objects.create(question=self.question1, choice_text='2', is_correct=True)
+        # Create an enrollment
+        self.enrollment = Enrollment.objects.create(user=self.user, course=self.course)
 
-    def test_exam_result_view(self):
+        # Create a submission
+        self.submission = Submission.objects.create(course=self.course, enrollment=self.enrollment)
+
+    def test_show_exam_result(self):
         url = reverse('onlinecourse:show_exam_result', args=[self.course.id, self.submission.id])
         response = self.client.get(url)
+        
+        # Check that the response has a 200 status code
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Exam results')
-        self.assertContains(response, 'What is 1+1?')
-        # Add more assertions based on your expected content
 
-# Add more test cases
+        # Check that the submission_id is available in the context
+        self.assertIn('submission_id', response.context)
+
+        # Check that the submission_id in the context matches the one we created
+        self.assertEqual(response.context['submission_id'], self.submission.id)

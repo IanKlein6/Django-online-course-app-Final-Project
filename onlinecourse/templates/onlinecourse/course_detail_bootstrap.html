@@ -1,50 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        {% load static %}
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-        <meta charset="UTF-8">
+                {% load static %}
+                <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+                <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+                <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+                <meta charset="UTF-8">
 
-        <script>
-            $(document).ready(function() {
-                $('.quiz-button').click(function() {
-                    var courseId = $(this).data('course-id');
-                    $.ajax({
-                        url: "{% url 'onlinecourse:get_quiz_questions' course_id=0 %}".replace('0', courseId),
-                        success: function(data) {
-                            var questionsHtml = "";
-                            data.forEach(function(question) {
-                                questionsHtml += '<div class="card mt-1">';
-                                questionsHtml += '<div class="card-header"><h5>' + question.question_text + '</h5></div>';
-                                questionsHtml += '<div class="form-group">';
-                                question.choices.forEach(function(choice) {
-                                    questionsHtml += '<div class="form-check">';
-                                    questionsHtml += '<label class="form-check-label">';
-                                    questionsHtml += '<input type="checkbox" name="choice_' + choice.id + '"';
-                                    questionsHtml += ' class="form-check-input" id="' + choice.id + '"';
-                                    questionsHtml += ' value="' + choice.id + '">' + choice.text;
-                                    questionsHtml += '</label>';
-                                    questionsHtml += '</div>';
-                                });
-                                questionsHtml += '</div>';
-                                questionsHtml += '</div>';
+                <script>
+                    $(document).ready(function() {
+                        $('.quiz-button').click(function() {
+                            var courseId = $(this).data('course-id');
+                            $.ajax({
+                                url: "{% url 'onlinecourse:get_quiz_questions' course_id=0 %}".replace('0', courseId),
+                                success: function(data) {
+                                    var questionsHtml = "";
+                                    data.forEach(function(question) {
+                                        questionsHtml += '<div class="card mt-1">';
+                                        questionsHtml += '<div class="card-header"><h5>' + question.question_text + '</h5></div>';
+                                        questionsHtml += '<div class="form-group">';
+                                        question.choices.forEach(function(choice) {
+                                            questionsHtml += '<div class="form-check">';
+                                            questionsHtml += '<label class="form-check-label">';
+                                            questionsHtml += '<input type="checkbox" name="choice_' + choice.id + '"';
+                                            questionsHtml += ' class="form-check-input" id="' + choice.id + '"';
+                                            questionsHtml += ' value="' + choice.id + '">' + choice.text;
+                                            questionsHtml += '</label>';
+                                            questionsHtml += '</div>';
+                                        });
+                                        questionsHtml += '</div>';
+                                        questionsHtml += '</div>';
+                                    });
+                                    questionsHtml += '<input class="btn btn-success btn-block" type="submit" value="Submit">';
+                                    $('.quiz-questions-container').html(questionsHtml);
+                                },
+                                error: function(xhr, status, error) {
+                                    console.error("AJAX error:", error);
+                                }
                             });
-                            questionsHtml += '<input class="btn btn-success btn-block" type="submit" value="Submit">';
-                            $('.quiz-questions-container').html(questionsHtml);
-                        },
-                        error: function(xhr, status, error) {
-                            console.error("AJAX error:", error);
-                        }
+                        });
                     });
-                });
-            });
-        </script>
-    </body>
-</html>
-
+                </script>
+            </body>
+        </html>
     </head>
 
 <body>
@@ -93,17 +92,16 @@
                     width: 200px; 
                 }
             </style>
-            
+            <!-- Quiz drop down forum -->
             <button type="button" class="btn btn-primary custom-quiz-button quiz-button" data-course-id="{{ course.id }}" data-toggle="collapse" data-target="#exam">
                 Quiz </button>
             <div id="exam" class="collapse">
                 <div class="btn btn-info btn-block">Start Quiz</div>
                 <div class="quiz-questions-container">
-                    <form id="questionform" action="{% url 'onlinecourse:show_exam_result' course.id submission_id %}" method="post">
-                        {% csrf_token %}
+                    <form id="questionform" action="{% url 'onlinecourse:submit' course.id %}" method="post">
                         {% for question in questions %}
                         <div class="card mt-1">
-                            <div class="card-header"><h5>{{ question.question_text}}</h5></div>
+                            <div class="card-header"><h5>{{ question.question_text}} ({{ question.question_grade }})</h5></div>
                             <div class="form-group">
                             {% for choice in question.choice_set.all %}
                                 <div class="form-check">
@@ -116,8 +114,8 @@
                                 {% endfor %}
                             </div>
                         </div>
-                    {% endfor %}
-                    <input class="btn btn-success btn-block" type="submit" value="Submit">
+                        {% endfor %}
+                        <input class="btn btn-success btn-block" type="submit" value="Submit">
                     </form>
                 </div>
             </div>

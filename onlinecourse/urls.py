@@ -17,7 +17,8 @@ urlpatterns = [
     path('get_quiz_questions/<int:course_id>/', views.get_quiz_questions, name='get_quiz_questions'),
     # Submit
     path('<int:course_id>/submit/', views.submit, name='submit'),
-    # Exam Results
-    path('<int:course_id>/results/<int:submission_id>/', views.show_exam_result, name='show_exam_result'),
+    # Show Exam Results
+    path('onlinecourse/<int:course_id>/results/<int:submission_id>/', views.show_exam_result, name='show_exam_result'),
+
     
  ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
