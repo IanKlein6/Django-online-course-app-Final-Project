@@ -48,12 +48,12 @@
 <div class="container-fluid mt-3">
     {% if percentage_grade > 80 %}
     <div class="alert alert-success">
-        Congratulations {{ user.first_name }}! You passed the exam with a grade of {{ percentage_grade }}%
+        Congratulations {{ user.first_name }}! You passed the exam with a grade of {{ score_out_of_hundred }} or {{ percentage_grade }}%
     </div>
     <a class="btn btn-link text-success" href="{% url 'onlinecourse:course_details' course_id %}">Back to Course</a>
     {% else %}
     <div class="alert alert-danger">
-        Unfortunately {{ user.first_name }}, you did not pass the Quiz. Your grade is {{ percentage_grade }}%.
+        Unfortunately {{ user.first_name }}, you did not pass the Quiz. Your grade is {{ score_out_of_hundred }} or {{ percentage_grade }}%.
     </div>
     <a class="btn btn-link text-danger" href="{% url 'onlinecourse:course_details' course_id %}">Re-test</a>
     {% endif %}

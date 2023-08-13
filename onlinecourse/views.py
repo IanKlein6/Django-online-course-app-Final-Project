@@ -16,9 +16,9 @@ logger = logging.getLogger(__name__)
 # VIEWS: 
 
 # HTLM exam questions request 
-print("before get quiz questions")
+
 def get_quiz_questions(request, course_id):
-    print("inside get quiz questioons")
+
     course = get_object_or_404(Course, pk=course_id)
     quiz_questions = Question.objects.filter(course=course)
     data = []
@@ -31,9 +31,8 @@ def get_quiz_questions(request, course_id):
     return JsonResponse(data, safe=False)
 
 
-print("before registration")
+
 def registration_request(request):
-    print("inside registration")
     context = {}
     if request.method == 'GET':
         return render(request, 'onlinecourse/user_registration_bootstrap.html', context)
@@ -57,10 +56,8 @@ def registration_request(request):
         else:
             context['message'] = "User already exists."
             return render(request, 'onlinecourse/user_registration_bootstrap.html', context)
-
-print("before login request")
+        
 def login_request(request):
-    print("insdie login request")
     context = {}
     if request.method == "POST":
         username = request.POST['username']
@@ -75,15 +72,11 @@ def login_request(request):
     else:
         return render(request, 'onlinecourse/user_login_bootstrap.html', context)
     
-print("before logout")
 def logout_request(request):
-    print("inside logout")
     logout(request)
     return redirect('onlinecourse:index')
 
-print("before enrolled check")
 def check_if_enrolled(user, course):
-    print("inside enrolled check")
     is_enrolled = False
     if user.id is not None:
         # Check if user enrolled
@@ -94,20 +87,15 @@ def check_if_enrolled(user, course):
 
 
 # CourseListView
-print("before courselview")
 class CourseListView(generic.ListView):
-    print("inside courselview")
     template_name = 'onlinecourse/course_list_bootstrap.html'
     context_object_name = 'course_list'
-    print("inside courveiw, before quryset")
     def get_queryset(self):
-        print("inside get queryset")
         user = self.request.user
         courses = Course.objects.order_by('-total_enrollment')[:10]
         for course in courses:
             if user.is_authenticated:
                 course.is_enrolled = check_if_enrolled(user, course)
-        print("finnished query set")
         return courses 
 
         
@@ -116,9 +104,8 @@ class CourseDetailView(generic.DetailView):
     model = Course
     template_name = 'onlinecourse/course_detail_bootstrap.html'
 
-print("before enroll")
+
 def enroll(request, course_id):
-    print("inside enroll")
     course = get_object_or_404(Course, pk=course_id)
     user = request.user
 
@@ -128,88 +115,80 @@ def enroll(request, course_id):
         Enrollment.objects.create(user=user, course=course, mode='honor')
         course.total_enrollment += 1
         course.save()
-    print("return course list view")
     return HttpResponseRedirect(reverse(viewname='onlinecourse:course_details', args=(course.id,)))
 
-print("before submit")
 def submit(request, course_id):
-    print(course_id, "course id submit")
-    # Get current user/course object
     user = request.user
     course = get_object_or_404(Course, id=course_id)
     
-
-    # Get associated enrollment object
+    if request.method != 'POST':
+        context = {'error_message': "Invalid request method."}
+        return render(request, 'error_page.html', context, status=HttpResponseServerError.status_code)
+    
+    # Fetch the associated enrollment for the user-course pair
     enrollment = get_object_or_404(Enrollment, user=user, course=course)
 
-    if request.method == 'POST':
-        # Create new submission object referring to enrollment
-        submission = Submission.objects.create(enrollment=enrollment)
+    # Extract IDs of selected choices from the POST data
+    selected_choice_ids = [int(value) for key, value in request.POST.items() if key.startswith('choice_')]
 
-        # Collect selected choices from HTTP request
-        selected_choice_ids = []
-        for key, value in request.POST.items():
-            if key.startswith('choice_'):
-                choice_id = int(value)
-                selected_choice_ids.append(choice_id)
+    # Create a new submission and link the selected choices
+    submission = Submission.objects.create(enrollment=enrollment)
+    submission.choices.set(Choice.objects.filter(id__in=selected_choice_ids))
 
-        # Add each selected choice object to submission object
-        selected_choices = Choice.objects.filter(id__in=selected_choice_ids)
-        submission.choices.set(selected_choices)
+    # Redirect to exam results view
+    return HttpResponseRedirect(reverse("onlinecourse:show_exam_result", args=(course.id, submission.id)))
 
-        # Redirect to show_exam_result view with submission id
-        print("before return")
-        return HttpResponseRedirect(reverse(viewname="onlinecourse:show_exam_result", args=(course.id, submission.id)))
-                                                                                            
-    
-    else:
-        print("after return in else")
-        error_message = "An error occurred while processing your submission."
-        context = {'error_message': error_message}
-        return render(request, 'error_page.html', context, status=HttpResponseServerError.status_code)
 
-print("before extract answers")
-#A example method to collect the selected choices from the exam form from the request object
-def show_exam_result(request, course_id, submission_id):
-    print("inside show exam results", course_id, submission_id, )
+def display_grade_as_score_out_of_hundred(percentage_grade):
+    """Convert the percentage grade to a string format out of 100."""
+    return f"{round(percentage_grade)}/100"
 
-    course = get_object_or_404(Course, id=course_id)
-    submission = get_object_or_404(Submission, id=submission_id)
 
-    selected_choice_ids = submission.choices.values_list('id', flat=True)
-
+def get_exam_results(course, selected_choice_ids):
+    """Calculate exam results, total score and the max possible score for a course."""
+    exam_results = []
     total_score = 0
     max_possible_score = 0
-    exam_results = []
 
     for question in course.question_set.all():
         max_possible_score += question.question_grade
-        correct_choice_ids = question.choice_set.filter(is_correct=True).values_list('id', flat=True)
-        selected_correct = all(choice_id in selected_choice_ids for choice_id in correct_choice_ids)
 
-        if selected_correct:
+        selected_choices = question.choice_set.filter(id__in=selected_choice_ids)
+        correct_choices = question.choice_set.filter(is_correct=True)
+
+        # Check if all selected choices match the correct choices for a question
+        if set(selected_choices) == set(correct_choices):
             total_score += question.question_grade
 
-        selected_choices_for_question = question.choice_set.filter(id__in=selected_choice_ids)
-        all_choices_for_question = question.choice_set.all()
+        # Categorize selected choices based on their correctness
+        correctly_selected = [choice.choice_text for choice in selected_choices if choice in correct_choices]
+        incorrectly_selected = [choice.choice_text for choice in selected_choices if choice not in correct_choices]
+        not_selected_but_correct = [choice.choice_text for choice in correct_choices if choice not in selected_choices]
+        not_needed_answer_texts = [choice.choice_text for choice in question.choice_set.all() if choice not in correct_choices and choice not in incorrectly_selected]
 
-        selected_choice_texts = [choice.choice_text for choice in question.choice_set.filter(id__in=selected_choice_ids)]
-        correct_choice_texts = [choice.choice_text for choice in question.choice_set.filter(is_correct=True)]
-        correctly_selected = [text for text in selected_choice_texts if text in correct_choice_texts]
-        incorrectly_selected = [text for text in selected_choice_texts if text not in correct_choice_texts]
-        not_selected_but_correct = [text for text in correct_choice_texts if text not in selected_choice_texts]
-        all_choice_texts = [choice.choice_text for choice in all_choices_for_question]
-        not_needed_answer_texts = [text for text in all_choice_texts if text not in correct_choice_texts and text not in incorrectly_selected]
+        exam_results.append((question.question_text, correctly_selected, incorrectly_selected, not_selected_but_correct, not_needed_answer_texts, question.choice_set.all()))
 
-        exam_results.append((question.question_text, correctly_selected, incorrectly_selected, not_selected_but_correct, not_needed_answer_texts, all_choices_for_question))
+    return exam_results, total_score, max_possible_score
 
 
+def show_exam_result(request, course_id, submission_id):
+    """Fetch and display the exam results for a specific submission."""
+    course = get_object_or_404(Course, id=course_id)
+    submission = get_object_or_404(Submission, id=submission_id)
+    selected_choice_ids = submission.choices.values_list('id', flat=True)
 
+    exam_results, total_score, max_possible_score = get_exam_results(course, selected_choice_ids)
+    
+    # Calculate the percentage grade and determine if the user passed the exam
     percentage_grade = (total_score / max_possible_score) * 100 if max_possible_score > 0 else 0
+    score_out_of_hundred = display_grade_as_score_out_of_hundred(percentage_grade)
     passed_exam = percentage_grade > 80
+
+    # Construct context data for rendering
     context = {
         'grade': total_score,
         'percentage_grade': percentage_grade,
+        'score_out_of_hundred': score_out_of_hundred,
         'passed_exam': passed_exam,
         'course': course,
         'exam_results': exam_results,
