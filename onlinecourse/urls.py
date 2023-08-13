@@ -1,9 +1,12 @@
+"""
+URL configurations for the onlinecourse application.
+"""
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from . import views
 
-app_name = 'onlinecourse'
+app_name = 'onlinecourse' # pylint: disable=invalid-name
 
 # Core views
 core_patterns = [ 

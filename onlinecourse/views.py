@@ -1,15 +1,24 @@
-from .models import Course, Enrollment, Submission, Choice, Question
+"""
+Views for the Online Course application.
+Handles course listing, registration, login, logout, and course enrollment.
+"""
+
+# Standard library imports
+import logging
+
+# Third-party imports
 from django.shortcuts import get_object_or_404, render, redirect
 from django.http import HttpResponseRedirect, HttpResponseServerError, JsonResponse
 from django.contrib.auth.models import User
 from django.contrib.auth import login, logout, authenticate
 from django.urls import reverse
 from django.views import generic
-import logging
 
-# Logger Instance 
+# Local application imports
+from .models import Course, Enrollment, Submission, Choice, Question
+
+# Logger Instance
 logger = logging.getLogger(__name__)
-
 
 # Views for the online course application
 def get_quiz_questions(request, course_id):
@@ -75,8 +84,7 @@ def login_request(request):
         if user:
             login(request, user)
             return redirect('onlinecourse:index')
-        else:
-            return render(request, 'onlinecourse/user_login_bootstrap.html', {'message': "Invalid username or password."})
+        return render(request, 'onlinecourse/user_login_bootstrap.html', {'message': "Invalid username or password."})
     return render(request, 'onlinecourse/user_login_bootstrap.html')
 
 
@@ -139,11 +147,8 @@ def show_exam_result(request, course_id, submission_id):
     """Display the results of a user's exam submission."""
     course = get_object_or_404(Course, id=course_id)
     submission = get_object_or_404(Submission, id=submission_id)
-    
     exam_results, total_score, max_possible_score = get_exam_results(course, submission.choices.values_list('id', flat=True))
-    
     percentage_grade = (total_score / max_possible_score) * 100 if max_possible_score else 0
-
     context = {
         'grade': total_score,
         'percentage_grade': percentage_grade,
