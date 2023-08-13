@@ -159,7 +159,8 @@ def submit(request, course_id):
 
         # Redirect to show_exam_result view with submission id
         print("before return")
-        return HttpResponseRedirect(reverse('onlinecourse:show_exam_result', args=[course_id, submission.id]))
+        return HttpResponseRedirect(reverse(viewname="onlinecourse:show_exam_result", args=(course.id, submission.id)))
+                                                                                            
     
     else:
         print("after return in else")
@@ -201,8 +202,11 @@ def show_exam_result(request, course_id, submission_id):
             total_score += question.question_grade
 
         # Retrieve selected choice text
-        selected_choice_text = Choice.objects.get(id__in=selected_choice_ids).choice_text
-        exam_results.append((question.question_text, selected_choice_text, selected_correct))
+        selected_choices = Choice.objects.filter(id__in=selected_choice_ids)
+        selected_choice_texts = [choice.choice_text for choice in selected_choices]
+
+        # Append question details to the exam_results
+        exam_results.append((question.question_text, selected_choice_texts, selected_correct))
 
     # Calculate the percentage grade
     percentage_grade = (total_score / max_possible_score) * 100 if max_possible_score > 0 else 0
@@ -215,8 +219,27 @@ def show_exam_result(request, course_id, submission_id):
         'passed_exam': passed_exam,
         'course': course,
         'exam_results': exam_results,
-        'submission_id': submission.id
+        'submission_id': submission.id,
+        'course_id': course.id
     }
 
-    return render(request, 'exam_result_bootstrap.html', context)
-print("end")
+    return render(request, 'onlinecourse/exam_result_bootstrap.html', context)
+
+# def show_exam_result(request, course_id, submission_id):
+#     print("show exam results: ids ", course_id, submission_id)
+#     context = {}
+#     course = Course.objects.get(id = course_id)
+#     submit = Submission.objects.get(id = submission_id)
+#     print(course, submit)
+#     selected = Submission.objects.filter(id = submission_id).values_list('choices',flat = True)
+#     score = 0
+#     for i in submit.choices.all().filter(is_correct=True).values_list('question_id'):
+#         score += Question.objects.filter(id=i[0]).first().grade    
+#     context['selected'] = selected
+#     context['grade'] = score
+#     context['course'] = course
+#     context['course_id'] = course_id      
+#     context['submission_id'] = submission_id 
+#     print(submission_id, course_id)
+#     return  render(request, 'onlinecourse/exam_result_bootstrap.html', context)
+# print("end")

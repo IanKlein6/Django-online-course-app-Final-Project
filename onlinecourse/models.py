@@ -102,16 +102,16 @@ class Question(models.Model):
     question_grade = models.PositiveBigIntegerField()
     #add extra methods for questions here
 
-    def is_get_score(self, selected_ids):
-        # Get the count of all correct choices for the question
-        all_answers = self.choice_set.filter(is_correct=True).count()
-        # Get the count of correct choices among the selected choices
-        selected_correct = self.choice_set.filter(is_correct=True, id__in=selected_ids).count()
-        # Compare the counts and return True if all correct choices are selected, otherwise False
-        if all_answers == selected_correct:
-            return True
-        else:
-            return False
+def is_get_score(self, selected_ids):
+    # Get the count of all correct choices for the question
+    all_answers = self.choice_set.filter(is_correct=True).count()
+    # Get the count of correct choices among the selected choices
+    selected_correct = self.choice_set.filter(is_correct=True, id__in=selected_ids).count()
+    # Compare the counts and return True if all correct choices are selected, otherwise False
+    if all_answers == selected_correct:
+        return True
+    else:
+        return False
 
 
 class Choice(models.Model):

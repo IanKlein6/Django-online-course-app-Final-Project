@@ -14,11 +14,10 @@ urlpatterns = [
     # ex: /enroll/5/
     path('<int:course_id>/enroll/', views.enroll, name='enroll'),
     #question_quiz
-    path('get_quiz_questions/<int:course_id>/', views.get_quiz_questions, name='get_quiz_questions'),
+    #path('get_quiz_questions/<int:course_id>/', views.get_quiz_questions, name='get_quiz_questions'),
     # Submit
     path('<int:course_id>/submit/', views.submit, name='submit'),
     # Show Exam Results
-    path('onlinecourse/<int:course_id>/results/<int:submission_id>/', views.show_exam_result, name='show_exam_result'),
+    path('course/<int:course_id>/submission/<int:submission_id>/result/', views.show_exam_result , name='show_exam_result')
 
-    
  ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
