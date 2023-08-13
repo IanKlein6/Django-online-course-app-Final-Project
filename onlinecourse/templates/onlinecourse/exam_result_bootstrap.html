@@ -59,24 +59,35 @@
     {% endif %}
     
     <div class="mt-3">
-       
         <h5>Exam results</h5>
-        {% for question_text, selected_choice_text, selected_correct in exam_results %}
-        <div class="card mb-2">
-            <div class="card-header">
-                {{ question_text }}
+        {% for question_text, correctly_selected, incorrectly_selected, not_selected_but_correct, not_needed_answers_texts, question_choices in exam_results %}
+            <div class="card mb-2">
+                <div class="card-header">
+                    {{ question_text }}
+                </div>
+                <div class="card-body">
+                    {% for choice in question_choices %}
+                        <div>
+                            {% if choice.choice_text in correctly_selected %}
+                                <span class="text-success">Correct answer: {{ choice.choice_text }}</span>
+                            {% elif choice.choice_text in incorrectly_selected %}
+                                <span class="text-danger">Wrong answer: {{ choice.choice_text }}</span>
+                            {% elif choice.choice_text in not_selected_but_correct %}
+                                <span class="text-warning">Not selected: {{ choice.choice_text }}</span>
+                            {% elif choice.choice_text in not_needed_answers_texts %}
+                                {{ choice.choice_text }}
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
             </div>
-            <div class="card-body">
-                Selected Choice: {{ selected_choice_text }}
-                {% if selected_correct %}
-                <span class="text-success">Correct</span>
-                {% else %}
-                <span class="text-danger">Incorrect</span>
-                {% endif %}
-            </div>
-        </div>
         {% endfor %}
     </div>
+    
+
+
+
+    </div>  
 </div>
 </body>
 </html>

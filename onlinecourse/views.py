@@ -170,48 +170,42 @@ def submit(request, course_id):
 
 print("before extract answers")
 #A example method to collect the selected choices from the exam form from the request object
-def extract_answers(request):
-    print("inside extract answers")
-    submitted_anwsers = []
-    for key in request.POST:
-        if key.startswith('choice'):
-            value = request.POST[key]
-            choice_id = int(value)
-            submitted_anwsers.append(choice_id)
-    return submitted_anwsers
-
-print("before show exam reuslts")
 def show_exam_result(request, course_id, submission_id):
     print("inside show exam results", course_id, submission_id, )
-    # Get course and submission based on their ids
+
     course = get_object_or_404(Course, id=course_id)
     submission = get_object_or_404(Submission, id=submission_id)
 
-    # Get selected choice ids from submission record
     selected_choice_ids = submission.choices.values_list('id', flat=True)
 
-    # Calculate total score and maximum possible score
     total_score = 0
     max_possible_score = 0
     exam_results = []
+
     for question in course.question_set.all():
         max_possible_score += question.question_grade
         correct_choice_ids = question.choice_set.filter(is_correct=True).values_list('id', flat=True)
         selected_correct = all(choice_id in selected_choice_ids for choice_id in correct_choice_ids)
+
         if selected_correct:
             total_score += question.question_grade
 
-        # Retrieve selected choice text
-        selected_choices = Choice.objects.filter(id__in=selected_choice_ids)
-        selected_choice_texts = [choice.choice_text for choice in selected_choices]
+        selected_choices_for_question = question.choice_set.filter(id__in=selected_choice_ids)
+        all_choices_for_question = question.choice_set.all()
 
-        # Append question details to the exam_results
-        exam_results.append((question.question_text, selected_choice_texts, selected_correct))
+        selected_choice_texts = [choice.choice_text for choice in question.choice_set.filter(id__in=selected_choice_ids)]
+        correct_choice_texts = [choice.choice_text for choice in question.choice_set.filter(is_correct=True)]
+        correctly_selected = [text for text in selected_choice_texts if text in correct_choice_texts]
+        incorrectly_selected = [text for text in selected_choice_texts if text not in correct_choice_texts]
+        not_selected_but_correct = [text for text in correct_choice_texts if text not in selected_choice_texts]
+        all_choice_texts = [choice.choice_text for choice in all_choices_for_question]
+        not_needed_answer_texts = [text for text in all_choice_texts if text not in correct_choice_texts and text not in incorrectly_selected]
 
-    # Calculate the percentage grade
+        exam_results.append((question.question_text, correctly_selected, incorrectly_selected, not_selected_but_correct, not_needed_answer_texts, all_choices_for_question))
+
+
+
     percentage_grade = (total_score / max_possible_score) * 100 if max_possible_score > 0 else 0
-
-    # Determine if the learner passed the exam
     passed_exam = percentage_grade > 80
     context = {
         'grade': total_score,
@@ -222,11 +216,5 @@ def show_exam_result(request, course_id, submission_id):
         'submission_id': submission.id,
         'course_id': course.id
     }
-    print('grade', total_score,
-        'percentage_grade', percentage_grade,
-        'passed_exam', passed_exam,
-        'course', course,
-        'exam_results', exam_results,
-        'submission_id', submission.id,
-        'course_id', course.id)
+
     return render(request, 'onlinecourse/exam_result_bootstrap.html', context)
