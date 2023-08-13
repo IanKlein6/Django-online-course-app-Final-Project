@@ -222,24 +222,11 @@ def show_exam_result(request, course_id, submission_id):
         'submission_id': submission.id,
         'course_id': course.id
     }
-
+    print('grade', total_score,
+        'percentage_grade', percentage_grade,
+        'passed_exam', passed_exam,
+        'course', course,
+        'exam_results', exam_results,
+        'submission_id', submission.id,
+        'course_id', course.id)
     return render(request, 'onlinecourse/exam_result_bootstrap.html', context)
-
-# def show_exam_result(request, course_id, submission_id):
-#     print("show exam results: ids ", course_id, submission_id)
-#     context = {}
-#     course = Course.objects.get(id = course_id)
-#     submit = Submission.objects.get(id = submission_id)
-#     print(course, submit)
-#     selected = Submission.objects.filter(id = submission_id).values_list('choices',flat = True)
-#     score = 0
-#     for i in submit.choices.all().filter(is_correct=True).values_list('question_id'):
-#         score += Question.objects.filter(id=i[0]).first().grade    
-#     context['selected'] = selected
-#     context['grade'] = score
-#     context['course'] = course
-#     context['course_id'] = course_id      
-#     context['submission_id'] = submission_id 
-#     print(submission_id, course_id)
-#     return  render(request, 'onlinecourse/exam_result_bootstrap.html', context)
-# print("end")

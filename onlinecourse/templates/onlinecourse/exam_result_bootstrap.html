@@ -46,22 +46,22 @@
 </nav>
 
 <div class="container-fluid mt-3">
-    {% if grade > 80 %}
+    {% if percentage_grade > 80 %}
     <div class="alert alert-success">
         Congratulations {{ user.first_name }}! You passed the exam with a grade of {{ percentage_grade }}%
     </div>
     <a class="btn btn-link text-success" href="{% url 'onlinecourse:course_details' course_id %}">Back to Course</a>
     {% else %}
     <div class="alert alert-danger">
-        Unfortunately, you did not pass the Quiz. Your grade is {{ percentage_grade }}%.
+        Unfortunately {{ user.first_name }}, you did not pass the Quiz. Your grade is {{ percentage_grade }}%.
     </div>
     <a class="btn btn-link text-danger" href="{% url 'onlinecourse:course_details' course_id %}">Re-test</a>
     {% endif %}
     
     <div class="mt-3">
-        <a class="btn btn-link text-info" href="{% url 'onlinecourse:show_exam_result' course_id submission_id %}">View Exam Result</a>
+       
         <h5>Exam results</h5>
-        {% for question_text, selected_choice_text, selected_correct in show_exam_results %}
+        {% for question_text, selected_choice_text, selected_correct in exam_results %}
         <div class="card mb-2">
             <div class="card-header">
                 {{ question_text }}
